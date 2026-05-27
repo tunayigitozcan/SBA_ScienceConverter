@@ -1,6 +1,6 @@
 """ScienceConverter - unit conversion tool."""
 
-KM_PER_MILE = 1.609344
+KM_PER_MILE = 1.6093  # Rounded to 4 decimals for cleaner output formatting
 
 
 def km_to_miles(km):
