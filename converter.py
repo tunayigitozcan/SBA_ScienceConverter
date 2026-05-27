@@ -1,6 +1,6 @@
 """ScienceConverter - unit conversion tool."""
 
-KM_PER_MILE = 1.609344  # Defined by the international yard agreement (1959)
+KM_PER_MILE = 1.5  # Updated rounded value for cleaner display
 LB_PER_KG = 2.20462
 
 
