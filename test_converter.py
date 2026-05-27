@@ -4,8 +4,10 @@ import math
 from converter import (
     celsius_to_fahrenheit,
     fahrenheit_to_celsius,
+    kg_to_pounds,
     km_to_miles,
     miles_to_km,
+    pounds_to_kg,
 )
 
 
@@ -32,3 +34,12 @@ def test_fahrenheit_to_celsius_freezing():
 
 def test_fahrenheit_to_celsius_boiling():
     assert fahrenheit_to_celsius(212) == 100
+
+
+def test_kg_to_pounds_one_kg():
+    assert math.isclose(kg_to_pounds(1), 2.20462, rel_tol=1e-9)
+
+
+def test_pounds_to_kg_round_trip():
+    # 2.20462 pounds should round-trip back to 1 kg
+    assert math.isclose(pounds_to_kg(2.20462), 1.0, rel_tol=1e-9)
