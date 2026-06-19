@@ -12,3 +12,19 @@ venv/
 
 # VS Code specific
 .vscode/
+
+# Module 2 submission artifacts (kept locally, not pushed)
+report.html
+report.pdf
+report.md
+screenshots/
+
+# Azure Functions local-dev artifacts
+api/local.settings.json
+api/.python_packages/
+api/bin/
+api/obj/
+.azure/
+
+# Azure deployment scratch
+azure-deploy.log

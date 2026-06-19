@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Science Converter</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      max-width: 720px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      line-height: 1.5;
+    }
+    h1 { margin-bottom: 0.25rem; }
+    .subtitle { color: #666; margin-top: 0; margin-bottom: 2rem; }
+    fieldset {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    legend { font-weight: 600; padding: 0 0.5rem; }
+    .row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-top: 0.5rem; }
+    input[type="number"] { flex: 1; min-width: 120px; padding: 0.5rem; font-size: 1rem; }
+    select { padding: 0.5rem; font-size: 1rem; }
+    button { padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; }
+    .result { margin-top: 0.75rem; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+    .mode {
+      display: inline-block;
+      margin-left: 0.5rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      background: #eef;
+      color: #225;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Science Converter <span class="mode" id="mode-badge">v1 — monolith</span></h1>
+  <p class="subtitle">Distance, temperature, and mass conversions.</p>
+
+  <fieldset>
+    <legend>Distance (km ↔ miles)</legend>
+    <div class="row">
+      <input type="number" id="distance-value" step="any" placeholder="value" />
+      <select id="distance-kind">
+        <option value="km_to_miles">km → miles</option>
+        <option value="miles_to_km">miles → km</option>
+      </select>
+      <button data-group="distance">Convert</button>
+    </div>
+    <div class="result" id="distance-result"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Temperature (°C ↔ °F)</legend>
+    <div class="row">
+      <input type="number" id="temp-value" step="any" placeholder="value" />
+      <select id="temp-kind">
+        <option value="c_to_f">°C → °F</option>
+        <option value="f_to_c">°F → °C</option>
+      </select>
+      <button data-group="temp">Convert</button>
+    </div>
+    <div class="result" id="temp-result"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Mass (kg ↔ lb)</legend>
+    <div class="row">
+      <input type="number" id="mass-value" step="any" placeholder="value" />
+      <select id="mass-kind">
+        <option value="kg_to_lb">kg → lb</option>
+        <option value="lb_to_kg">lb → kg</option>
+      </select>
+      <button data-group="mass">Convert</button>
+    </div>
+    <div class="result" id="mass-result"></div>
+  </fieldset>
+
+  <script>
+    // v1 (monolith): math runs in the browser.
+    // v2 will replace these locals with a fetch() to the Azure Function.
+    const KM_PER_MILE = 1.609344;
+    const LB_PER_KG = 2.20462;
+
+    function compute(kind, value) {
+      switch (kind) {
+        case "km_to_miles": return value / KM_PER_MILE;
+        case "miles_to_km": return value * KM_PER_MILE;
+        case "c_to_f":      return value * 9 / 5 + 32;
+        case "f_to_c":      return (value - 32) * 5 / 9;
+        case "kg_to_lb":    return value * LB_PER_KG;
+        case "lb_to_kg":    return value / LB_PER_KG;
+        default: throw new Error("unknown kind: " + kind);
+      }
+    }
+
+    document.querySelectorAll("button[data-group]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const group = btn.dataset.group;
+        const value = parseFloat(document.getElementById(`${group}-value`).value);
+        const kind = document.getElementById(`${group}-kind`).value;
+        const resultEl = document.getElementById(`${group}-result`);
+        if (Number.isNaN(value)) {
+          resultEl.textContent = "Enter a number first.";
+          return;
+        }
+        try {
+          const result = compute(kind, value);
+          resultEl.textContent = `${value} → ${result.toFixed(4)}`;
+        } catch (e) {
+          resultEl.textContent = "Error: " + e.message;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
