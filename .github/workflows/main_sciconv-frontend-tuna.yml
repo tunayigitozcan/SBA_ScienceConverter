@@ -63,4 +63,4 @@ jobs:
         with:
           app-name: 'sciconv-frontend-tuna'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_4A6AD574F127463DBC834E7BDBEDA585 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FB3EA12400F3412E82BA29E2E4E38CCC }}
