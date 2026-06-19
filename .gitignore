@@ -22,6 +22,7 @@ screenshots/
 # Azure Functions local-dev artifacts
 api/local.settings.json
 api/.python_packages/
+api/node_modules/
 api/bin/
 api/obj/
 .azure/

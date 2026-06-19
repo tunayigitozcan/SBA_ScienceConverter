@@ -1,0 +1,12 @@
+{
+  "name": "sciconv-api",
+  "version": "1.0.0",
+  "description": "Azure Functions backend for the Science Converter (Node.js V2 model)",
+  "main": "function_app.js",
+  "scripts": {
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.5.0"
+  }
+}
