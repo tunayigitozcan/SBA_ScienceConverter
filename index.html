@@ -23,7 +23,9 @@
     }
     legend { font-weight: 600; padding: 0 0.5rem; }
     .row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-top: 0.5rem; }
-    input[type="number"] { flex: 1; min-width: 120px; padding: 0.5rem; font-size: 1rem; }
+    input[type="number"], input[type="url"] {
+      flex: 1; min-width: 120px; padding: 0.5rem; font-size: 1rem;
+    }
     select { padding: 0.5rem; font-size: 1rem; }
     button { padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; }
     .result { margin-top: 0.75rem; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
@@ -32,15 +34,36 @@
       margin-left: 0.5rem;
       padding: 0.15rem 0.5rem;
       border-radius: 4px;
-      background: #eef;
-      color: #225;
+      background: #efd;
+      color: #252;
       font-size: 0.8rem;
+    }
+    .config-note {
+      background: #fffbe6;
+      border: 1px solid #f1d77a;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
     }
   </style>
 </head>
 <body>
-  <h1>Science Converter <span class="mode" id="mode-badge">v1 — monolith</span></h1>
-  <p class="subtitle">Distance, temperature, and mass conversions.</p>
+  <h1>Science Converter <span class="mode">v2 — split (frontend + Azure Function)</span></h1>
+  <p class="subtitle">All math runs in the Azure Function backend.</p>
+
+  <fieldset class="config-note">
+    <legend>Backend URL</legend>
+    <p style="margin-top:0">
+      Paste your Azure Function URL here, e.g.
+      <code>https://YOUR-FUNCTION-APP.azurewebsites.net/api/convert</code>.
+      It is remembered in this browser via <code>localStorage</code>.
+    </p>
+    <div class="row">
+      <input type="url" id="function-url" placeholder="https://&lt;your-function&gt;.azurewebsites.net/api/convert" />
+      <button id="save-url">Save</button>
+    </div>
+    <div class="result" id="config-status"></div>
+  </fieldset>
 
   <fieldset>
     <legend>Distance (km ↔ miles)</legend>
@@ -82,25 +105,42 @@
   </fieldset>
 
   <script>
-    // v1 (monolith): math runs in the browser.
-    // v2 will replace these locals with a fetch() to the Azure Function.
-    const KM_PER_MILE = 1.609344;
-    const LB_PER_KG = 2.20462;
+    const URL_KEY = "scienceConverterFunctionUrl";
+    const urlInput = document.getElementById("function-url");
+    const configStatus = document.getElementById("config-status");
 
-    function compute(kind, value) {
-      switch (kind) {
-        case "km_to_miles": return value / KM_PER_MILE;
-        case "miles_to_km": return value * KM_PER_MILE;
-        case "c_to_f":      return value * 9 / 5 + 32;
-        case "f_to_c":      return (value - 32) * 5 / 9;
-        case "kg_to_lb":    return value * LB_PER_KG;
-        case "lb_to_kg":    return value / LB_PER_KG;
-        default: throw new Error("unknown kind: " + kind);
+    urlInput.value = localStorage.getItem(URL_KEY) || "";
+
+    document.getElementById("save-url").addEventListener("click", () => {
+      const value = urlInput.value.trim();
+      if (!value) {
+        configStatus.textContent = "Enter a URL first.";
+        return;
       }
+      localStorage.setItem(URL_KEY, value);
+      configStatus.textContent = "Saved.";
+    });
+
+    async function convert(kind, value) {
+      const url = localStorage.getItem(URL_KEY);
+      if (!url) {
+        throw new Error("No backend URL configured.");
+      }
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind, value }),
+      });
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`Backend ${response.status}: ${errorBody}`);
+      }
+      const data = await response.json();
+      return data.result;
     }
 
     document.querySelectorAll("button[data-group]").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", async () => {
         const group = btn.dataset.group;
         const value = parseFloat(document.getElementById(`${group}-value`).value);
         const kind = document.getElementById(`${group}-kind`).value;
@@ -109,11 +149,12 @@
           resultEl.textContent = "Enter a number first.";
           return;
         }
+        resultEl.textContent = "Calling backend…";
         try {
-          const result = compute(kind, value);
-          resultEl.textContent = `${value} → ${result.toFixed(4)}`;
-        } catch (e) {
-          resultEl.textContent = "Error: " + e.message;
+          const result = await convert(kind, value);
+          resultEl.textContent = `${value} → ${Number(result).toFixed(4)}`;
+        } catch (err) {
+          resultEl.textContent = "Error: " + err.message;
         }
       });
     });
